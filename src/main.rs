@@ -47,8 +47,10 @@ async fn main() {
                 let commands = &fm.options().commands;
                 let create_commands = poise::builtins::create_application_commands(commands);
 
+                info!("🔁 Registering commands...");
                 serenity::Command::set_global_commands(ctx, create_commands).await?;
                 info!("📤 Registered commands.");
+                info!("✅ Bot initialized.");
                 Ok(Data {})
             })
         })
