@@ -7,7 +7,14 @@ edition = "2021"
 
 [dependencies]
 dotenvy = "0.15.7"
-poise = "0.5.6"
 tokio = { version = "1.32.0", features = ["rt-multi-thread"] }
 tracing = { version = "0.1.37", features = ["log"] }
 tracing-subscriber = "0.3.17"
+
+[dependencies.poise]
+git = "https://github.com/serenity-rs/poise"
+branch = "serenity-next"
+
+[dependencies.serenity]
+git = "https://github.com/serenity-rs/serenity"
+branch = "next"

@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+use ::serenity::gateway::ActivityData;
 use poise::serenity_prelude as serenity;
 use tracing::{error, info};
 mod commands;
@@ -17,13 +18,12 @@ async fn main() {
         error!("❌ `dotenv`: {e}");
         std::process::exit(0);
     };
-    let bot = poise::Framework::builder()
+    poise::FrameworkBuilder::default()
         .token(dotenvy::var("BOT_TOKEN").expect("❌ Missing BOT_TOKEN in .env file"))
         .intents(serenity::GatewayIntents::all())
         .options(poise::FrameworkOptions {
-            skip_checks_for_owners: true,
             commands: commands::all(),
-            owners: HashSet::from([serenity::UserId(401845716991082496)]),
+            owners: HashSet::from([401845716991082496.into()]),
             pre_command: |ctx| {
                 Box::pin(async move {
                     info!(
@@ -39,20 +39,20 @@ async fn main() {
             },
             ..Default::default()
         })
-        .setup(move |ctx, _ready, fm| {
+        .user_data_setup(move |ctx, _ready, fm| {
             Box::pin(async move {
                 info!("👷 Setting up the bot...");
-                ctx.set_activity(serenity::Activity::playing("Casio Theme 4 life"))
-                    .await;
+                ctx.set_activity(Some(ActivityData::playing("Casio Theme 4 life")));
                 info!("🕹 Setted activity.");
-                poise::builtins::register_globally(ctx, &fm.options().commands).await?;
+                let commands = &fm.options().commands;
+                let create_commands = poise::builtins::create_application_commands(commands);
+
+                serenity::Command::set_global_commands(ctx, create_commands).await?;
                 info!("📤 Registered commands.");
                 Ok(Data {})
             })
         })
-        .build()
+        .run()
         .await
         .unwrap();
-
-    bot.start().await.unwrap();
 }

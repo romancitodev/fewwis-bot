@@ -1,5 +1,7 @@
 use crate::types::Commands;
 
+// Categorias
+mod todos;
 mod utilities;
 
 macro_rules! export_commands {
@@ -13,5 +15,8 @@ macro_rules! export_commands {
 }
 
 pub fn all() -> Commands {
-    export_commands![utilities].iter().map(|e| e()).collect()
+    export_commands![utilities, todos]
+        .iter()
+        .map(|e| e())
+        .collect()
 }

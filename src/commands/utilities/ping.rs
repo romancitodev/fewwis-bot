@@ -1,29 +1,37 @@
-use crate::{Context, Error};
-use poise::serenity_prelude as serenity;
+use crate::{helper::Colors, Context, Error};
+use ::serenity::builder::{CreateAllowedMentions, CreateEmbed};
+use poise::{serenity_prelude as serenity, CreateReply};
 
 /// Pong!
 #[poise::command(slash_command, category = "Utilities")]
-pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn ping(
+    ctx: Context<'_>,
+    #[description = "Make the message ephemeral?"] ephemeral: Option<bool>,
+) -> Result<(), Error> {
     let ping = (ctx.created_at().timestamp_millis() - serenity::Timestamp::now().timestamp_millis())
         as f32
-        / 100.0;
+        / 10.0;
 
     let color = match ping as i32 {
-        i32::MIN..0 => (175, 175, 175),
-        0..100 => (145, 247, 131),
-        100..200 => (247, 235, 131),
-        _ => (247, 153, 131),
+        i32::MIN..0 => Colors::Gray,
+        0..100 => Colors::Green,
+        100..200 => Colors::Orange,
+        _ => Colors::Red,
     };
 
-    ctx.send(|msg| {
-        msg.embed(|embed| {
-            embed
-                .title("🏓 Pong")
-                .description(format!("📡 {ping}ms"))
-                .color(color)
-        })
-        .allowed_mentions(|m| m.empty_parse())
-    })
+    let reply = CreateReply::new();
+    let embed = CreateEmbed::new();
+    ctx.send(
+        reply
+            .embed(
+                embed
+                    .title("🏓 Pong")
+                    .description(format!("📡 `{ping}ms`"))
+                    .color(color),
+            )
+            .allowed_mentions(CreateAllowedMentions::new().empty_users())
+            .ephemeral(ephemeral.unwrap_or_default()),
+    )
     .await?;
 
     Ok(())
