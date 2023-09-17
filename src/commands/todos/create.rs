@@ -1,6 +1,9 @@
 use crate::{Context, Error};
 use ::serenity::{
-    builder::{Builder, CreateAllowedMentions, CreateEmbed, CreateForumPost, CreateMessage},
+    all::ForumTagId,
+    builder::{
+        Builder, CreateAllowedMentions, CreateEmbed, CreateForumPost, CreateMessage, EditThread,
+    },
     model::Color,
 };
 use poise::{serenity_prelude as serenity, CreateReply};
@@ -80,7 +83,7 @@ pub async fn create(
 }
 
 #[repr(u64)]
-#[derive(ChoiceParameter)]
+#[derive(ChoiceParameter, Clone, Copy, PartialEq)]
 pub enum Status {
     #[name = "✏ To-do"]
     Todo = 1150602743623471215,
@@ -98,11 +101,11 @@ async fn is_forum_thread(ctx: Context<'_>) -> Result<bool, Error> {
 
     let Ok(serenity::Channel::Guild(parent_id)) = channel
         .parent_id
-        .ok_or("You must be in a forum thread")?
+        .ok_or("You must be in a forum thread.")?
         .to_channel(ctx)
         .await
     else {
-        return Err("You must be in a guild channel".into());
+        return Err("You must be in a guild channel.".into());
     };
 
     if (parent_id.kind != ChannelType::Forum)
@@ -111,7 +114,7 @@ async fn is_forum_thread(ctx: Context<'_>) -> Result<bool, Error> {
             ChannelType::PublicThread | ChannelType::PrivateThread
         )
     {
-        return Err("You must be in a forum post".into());
+        return Err("You must be in a forum post.".into());
     }
 
     Ok(true)
@@ -119,10 +122,13 @@ async fn is_forum_thread(ctx: Context<'_>) -> Result<bool, Error> {
 
 /// Change the status of any task
 #[poise::command(slash_command, check = "is_forum_thread", category = "Utilities")]
-pub async fn update(ctx: Context<'_>, status: Status) -> Result<(), Error> {
-    let Ok(serenity::Channel::Guild(channel)) = ctx.channel_id().to_channel(ctx).await else {
+pub async fn update(
+    ctx: Context<'_>,
+    #[description = "the new tag to apply to the task"] status: Status,
+) -> Result<(), Error> {
+    let Ok(serenity::Channel::Guild(mut channel)) = ctx.channel_id().to_channel(ctx).await else {
         error!("❌ Cannot fetch the guild channel...");
-        return Err("Error fetching guild channel".into());
+        return Err("Error fetching guild channel.".into());
     };
 
     let reply = CreateReply::new();
@@ -131,19 +137,23 @@ pub async fn update(ctx: Context<'_>, status: Status) -> Result<(), Error> {
     if channel.applied_tags.contains(&serenity::ForumTagId(
         NonZeroU64::new(status as u64).unwrap(),
     )) {
-        return Err("You can't set the same tag".into());
+        return Err("You can't set the same tag.".into());
     }
 
     ctx.send(
         reply
-            .embed(
-                embed
-                    .color(Color::BLURPLE)
-                    .title("✅ To-do updated!")
-                    .description(format!("> Just go to ")),
-            )
+            .embed(embed.color(Color::FOOYOO).title("✅ To-do updated!"))
             .ephemeral(true),
     )
     .await?;
+
+    channel
+        .edit_thread(
+            ctx,
+            EditThread::default()
+                .applied_tags([ForumTagId::from(status as u64)])
+                .archived(status == Status::Finished),
+        )
+        .await?;
     Ok(())
 }
