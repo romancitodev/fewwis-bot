@@ -4,6 +4,7 @@ mod age;
 mod avatar;
 mod ping;
 mod sum;
+mod translate;
 
 pub fn commands() -> FnCommands {
     vec![
@@ -12,5 +13,7 @@ pub fn commands() -> FnCommands {
         sum::sum,
         avatar::avatar_ctx_menu,
         avatar::avatar,
+        translate::translate_ctx_menu,
+        translate::translate,
     ]
 }
