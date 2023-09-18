@@ -1,14 +1,16 @@
-use crate::{Context, Error};
+use crate::{
+    api::{Translator, RAPID_API_TRANSLATE},
+    Context, Error,
+};
 use ::serenity::{builder::CreateEmbed, model::Color};
 use poise::{serenity_prelude as serenity, CreateReply};
 use reqwest::header;
-use serde::Deserialize;
 
-/// Get the avatar of any member in the server
+/// Translate a text
 #[poise::command(context_menu_command = "Translate text", category = "Utilities")]
 pub async fn translate_ctx_menu(
     ctx: Context<'_>,
-    #[description = "The member to fetch"] msg: serenity::Message,
+    #[description = "The text to translate"] msg: serenity::Message,
 ) -> Result<(), Error> {
     let text = msg.content;
     let response = get_translation(text.clone()).await?;
@@ -47,7 +49,7 @@ pub async fn translate(
             embed
                 .title("📄 Translator")
                 .description(format!(
-                    "> 📤 **Original Text**: `{}`\n> ✨ **Translated Text**: `{}`",
+                    "> 📤 **Original Text**: `{}`\n\n> ✨ **Translated Text**: `{}`",
                     text, response.data.translated_text
                 ))
                 .color(Color::BLURPLE),
@@ -74,7 +76,7 @@ async fn get_translation(text: String) -> Result<Translator, Error> {
 
     let client = reqwest::Client::new();
     Ok(client
-        .post("https://text-translator2.p.rapidapi.com/translate")
+        .post(RAPID_API_TRANSLATE)
         .headers(headers)
         .form(&[
             ("source_language", "en"),
@@ -85,17 +87,4 @@ async fn get_translation(text: String) -> Result<Translator, Error> {
         .await?
         .json::<Translator>()
         .await?)
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Translator {
-    data: TranslatorData,
-    status: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TranslatorData {
-    translated_text: String,
 }

@@ -6,6 +6,7 @@ use ::serenity::gateway::ActivityData;
 use helper::handle_error;
 use poise::serenity_prelude as serenity;
 use tracing::{error, info};
+mod api;
 mod commands;
 mod helper;
 mod types;
