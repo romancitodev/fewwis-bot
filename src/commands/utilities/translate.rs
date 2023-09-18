@@ -35,7 +35,7 @@ pub async fn translate_ctx_menu(
 #[poise::command(slash_command, category = "Utilities")]
 pub async fn translate(
     ctx: Context<'_>,
-    #[description = "The member to fetch"] text: String,
+    #[description = "The text to translate"] text: String,
 ) -> Result<(), Error> {
     let response = get_translation(text.clone()).await?;
 
