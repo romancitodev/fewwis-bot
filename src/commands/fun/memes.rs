@@ -1,7 +1,6 @@
-use std::time::Duration;
-
 use crate::{
     api::{Memes, MEME_API},
+    helper::{Colors, Paginator},
     Context, Error,
 };
 use ::serenity::{
@@ -28,6 +27,17 @@ pub async fn meme(
 
     let reply = CreateReply::new();
 
+    ctx.defer_ephemeral().await?;
+    let initial = ctx
+        .send(
+            reply.clone().embed(
+                CreateEmbed::new()
+                    .color(Colors::White)
+                    .title("🔁 Fetching memes..."),
+            ),
+        )
+        .await?;
+
     let memes_count = 50;
     let embeds = get_memes(subreddit, memes_count)
         .await?
@@ -47,101 +57,45 @@ pub async fn meme(
         })
         .collect::<Vec<_>>();
 
-    let mut counter = 0;
-    let left = CreateButton::new("left")
+    let left = CreateButton::new("-5")
         .style(serenity::ButtonStyle::Primary)
-        .label("◀")
+        .label("5️⃣")
         .disabled(true);
-    let center = CreateButton::new("center")
-        .label(format!("{}/{}", counter + 1, embeds.len()))
-        .disabled(true)
-        .style(serenity::ButtonStyle::Secondary);
-    let right = CreateButton::new("right")
+    let center = CreateButton::new("delete")
+        .label("🗑")
+        .style(serenity::ButtonStyle::Danger);
+    let right = CreateButton::new("+5")
         .style(serenity::ButtonStyle::Primary)
-        .label("▶");
-    let to_beggining = CreateButton::new("beggining")
+        .label("5️⃣");
+    let to_beggining = CreateButton::new("-10")
         .style(serenity::ButtonStyle::Primary)
-        .label("⏪")
+        .label("🔟")
         .disabled(true);
-    let to_final = CreateButton::new("final")
+    let to_final = CreateButton::new("+10")
         .style(serenity::ButtonStyle::Primary)
-        .label("⏩");
+        .label("🔟");
 
     let buttons = CreateActionRow::Buttons(vec![to_beggining, left, center, right, to_final]);
 
-    let bot_interaction = ctx
-        .send(
-            reply
-                .clone()
-                .embed(embeds[0].clone())
-                .components(vec![buttons]),
-        )
-        .await?;
+    let mut paginator = Paginator::new(embeds.clone()).add_row(
+        buttons,
+        |_, id, counter, pages| match id {
+            "-5" => 0.max(counter - 5),
+            "+5" => pages.min(counter + 5),
+            "-10" => 0.max(counter - 10),
+            "+10" => pages.min(counter + 10),
+            _ => counter,
+        },
+        |id, counter, pages| match id {
+            1 | 2 => counter <= 0,
+            4 | 5 => counter >= pages - 1,
+            _ => false,
+        },
+    );
+    initial.delete(ctx).await?;
+    ctx.defer().await?;
 
-    let message_id = bot_interaction.message().await?.id;
-
-    while let Some(interaction) = bot_interaction
-        .message()
-        .await?
-        .await_component_interactions(ctx.discord().shard.clone())
-        .message_id(message_id)
-        .timeout(Duration::from_secs(60))
-        .await
-    {
-        match interaction.data.custom_id.as_str() {
-            "left" => counter = 0.max(counter - 1),
-            "right" => counter = (embeds.len() - 1).min(counter + 1),
-            "beggining" => counter = 0,
-            "final" => counter = embeds.len() - 1,
-            _ => (),
-        };
-
-        let left = CreateButton::new("left")
-            .style(serenity::ButtonStyle::Primary)
-            .label("◀")
-            .disabled(counter == 0);
-        let center = CreateButton::new("center")
-            .label(format!("{}/{}", counter + 1, embeds.len()))
-            .disabled(true)
-            .style(serenity::ButtonStyle::Secondary);
-        let right = CreateButton::new("right")
-            .style(serenity::ButtonStyle::Primary)
-            .disabled(counter >= embeds.len() - 1)
-            .label("▶");
-        let to_beggining = CreateButton::new("beggining")
-            .style(serenity::ButtonStyle::Primary)
-            .label("⏪")
-            .disabled(counter == 0);
-        let to_final = CreateButton::new("final")
-            .style(serenity::ButtonStyle::Primary)
-            .label("⏩")
-            .disabled(counter >= embeds.len() - 1);
-
-        let buttons = CreateActionRow::Buttons(vec![to_beggining, left, center, right, to_final]);
-
-        interaction
-            .create_response(ctx, serenity::CreateInteractionResponse::Acknowledge)
-            .await?;
-        bot_interaction
-            .edit(
-                ctx,
-                reply
-                    .clone()
-                    .embed(embeds[counter].clone())
-                    .components(vec![buttons]),
-            )
-            .await?;
-    }
-
-    bot_interaction
-        .edit(
-            ctx,
-            reply
-                .clone()
-                .embed(embeds[counter].clone())
-                .components(vec![]),
-        )
-        .await?;
+    paginator.paginate(ctx).await?;
 
     Ok(())
 }
