@@ -5,9 +5,11 @@ use std::collections::HashSet;
 use ::serenity::gateway::ActivityData;
 use helper::handle_error;
 use poise::serenity_prelude as serenity;
+use sea_orm::{ConnectionTrait, Database, Statement};
 use tracing::{error, info};
 mod api;
 mod commands;
+mod entities;
 mod helper;
 mod types;
 
@@ -53,8 +55,20 @@ async fn main() {
                 info!("🔁 Registering commands...");
                 serenity::Command::set_global_commands(ctx, create_commands).await?;
                 info!("📤 Registered commands.");
+                info!("📡 Connecting to database...");
+                let connection = Database::connect(dotenvy::var("DATABASE_URL")?).await?;
+                connection
+                    .execute(Statement::from_string(
+                        connection.get_database_backend(),
+                        format!(
+                            "CREATE DATABASE IF NOT EXISTS `{}`;",
+                            dotenvy::var("DATABASE_NAME")?
+                        ),
+                    ))
+                    .await?;
+                info!("📡 Connection to database successfull.");
                 info!("✅ Bot initialized.");
-                Ok(Data {})
+                Ok(Data::new(connection))
             })
         })
         .run()

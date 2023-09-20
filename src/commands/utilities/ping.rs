@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::{helper::Colors, Context, Error};
 use ::serenity::builder::{CreateAllowedMentions, CreateEmbed};
 use poise::CreateReply;
@@ -10,13 +12,16 @@ pub async fn ping(
 ) -> Result<(), Error> {
     let shard_manager = ctx.framework().shard_manager();
 
+    let before = Instant::now();
     let runners = shard_manager.runners.lock().await;
 
     let runner = runners
         .get(&ctx.discord().shard_id)
         .ok_or("❌ Cannot found shard.")?;
 
-    let ping = runner.latency.ok_or("❌ Cannot fetch latency")?;
+    let ping = runner
+        .latency
+        .unwrap_or(Instant::now().duration_since(before));
 
     let color = match ping.as_millis() {
         u128::MIN => Colors::Gray,
@@ -25,6 +30,13 @@ pub async fn ping(
         _ => Colors::Red,
     };
 
+    let db = &ctx.data().db;
+
+    let before = Instant::now();
+    db.ping().await?;
+    let after = Instant::now();
+    let database_ping = after.duration_since(before);
+
     let reply = CreateReply::new();
     let embed = CreateEmbed::new();
     ctx.send(
@@ -32,7 +44,9 @@ pub async fn ping(
             .embed(
                 embed
                     .title("🏓 Pong")
-                    .description(format!("📡 `{ping:?}`"))
+                    .description(format!(
+                        "> 📡 Discord ping: `{ping:?}`\n> 📡 Database ping: `{database_ping:?}`"
+                    ))
                     .color(color),
             )
             .allowed_mentions(CreateAllowedMentions::new().empty_users())
