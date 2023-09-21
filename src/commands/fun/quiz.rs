@@ -181,7 +181,24 @@ pub async fn play_flags(ctx: Context<'_>) -> Result<(), Error> {
                 reply.clone().embed(
                     embed
                         .color(Colors::Green)
-                        .description("> 🎉 **Congrats!** You got it right."),
+                        .description("> 🎉 **Congrats!** You got it right.")
+                        .fields([
+                            (
+                                ":flag_us: English",
+                                format!("{}/{}", flag.name.common, flag.name.official),
+                                true,
+                            ),
+                            (
+                                ":flag_es: Spanish",
+                                format!(
+                                    "{}/{}",
+                                    flag.translations.spa.common, flag.translations.spa.official
+                                ),
+                                true,
+                            ),
+                        ])
+                        .thumbnail(flag.coat_of_arms.png)
+                        .image(flag.flags.png),
                 ),
             )
             .await?;
