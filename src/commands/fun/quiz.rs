@@ -3,7 +3,7 @@ use sea_orm::EntityTrait;
 use std::time::Duration;
 
 use crate::{
-    api::{Countries, FLAGS_API},
+    api::{Countries, Country, FLAGS_API},
     entities::flags,
     helper::{
         db::{get_flags, get_user},
@@ -17,11 +17,14 @@ use ::serenity::{
 };
 use poise::{serenity_prelude as serenity, CreateReply};
 
+#[derive(PartialEq, Eq)]
 enum Reason {
     Correct,
     Loss,
     Timeout,
 }
+
+const MAX_RETRIES: i32 = 3;
 
 /// Play a quiz!
 #[poise::command(
@@ -66,7 +69,6 @@ pub async fn play_flags(ctx: Context<'_>) -> Result<(), Error> {
             ),
         )
         .await?;
-    const MAX_RETRIES: i32 = 3;
     let reply = CreateReply::new();
     let embed = CreateEmbed::new();
     let db = &ctx.data().db;
@@ -138,27 +140,12 @@ pub async fn play_flags(ctx: Context<'_>) -> Result<(), Error> {
         if counter >= MAX_RETRIES {
             msg.edit(
                 ctx,
-                reply.clone().embed(
-                    embed
-                        .clone()
-                        .thumbnail(flag.coat_of_arms.png.clone())
-                        .description("> 🤓:point_up: The name of the country is:")
-                        .fields([
-                            (
-                                ":flag_us: English",
-                                format!("{}/{}", flag.name.common, flag.name.official),
-                                true,
-                            ),
-                            (
-                                ":flag_es: Spanish",
-                                format!(
-                                    "{}/{}",
-                                    flag.translations.spa.common, flag.translations.spa.official
-                                ),
-                                true,
-                            ),
-                        ]),
-                ),
+                reply.clone().embed(get_embed_flag(
+                    Colors::Red,
+                    "> 🤓:point_up: The name of the country is:",
+                    &flag,
+                    3,
+                )),
             )
             .await?;
             reason = Reason::Loss;
@@ -178,28 +165,12 @@ pub async fn play_flags(ctx: Context<'_>) -> Result<(), Error> {
         Reason::Correct => {
             msg.edit(
                 ctx,
-                reply.clone().embed(
-                    embed
-                        .color(Colors::Green)
-                        .description("> 🎉 **Congrats!** You got it right.")
-                        .fields([
-                            (
-                                ":flag_us: English",
-                                format!("{}/{}", flag.name.common, flag.name.official),
-                                true,
-                            ),
-                            (
-                                ":flag_es: Spanish",
-                                format!(
-                                    "{}/{}",
-                                    flag.translations.spa.common, flag.translations.spa.official
-                                ),
-                                true,
-                            ),
-                        ])
-                        .thumbnail(flag.coat_of_arms.png)
-                        .image(flag.flags.png),
-                ),
+                reply.clone().embed(get_embed_flag(
+                    Colors::Green,
+                    "> 🎉 **Congrats!** You got it right.",
+                    &flag,
+                    counter,
+                )),
             )
             .await?;
             match counter {
@@ -224,11 +195,24 @@ pub async fn play_flags(ctx: Context<'_>) -> Result<(), Error> {
                 _ => unreachable!(),
             }
         }
-        Reason::Loss => flags::ActiveModel {
-            wrong: sea_orm::ActiveValue::Set(active_flags.wrong.unwrap() + 1),
-            ..active_flags
-        },
-        Reason::Timeout => active_flags,
+        reason @ Reason::Loss | reason @ Reason::Timeout => {
+            if Reason::Timeout == reason {
+                msg.edit(
+                    ctx,
+                    reply.clone().embed(get_embed_flag(
+                        Colors::Red,
+                        "> ⌛ **Timeout**! you didn't guess in time.",
+                        &flag,
+                        counter,
+                    )),
+                )
+                .await?;
+            };
+            flags::ActiveModel {
+                wrong: sea_orm::ActiveValue::Set(active_flags.wrong.unwrap() + 1),
+                ..active_flags
+            }
+        }
     };
 
     flags::Entity::update(updated_flags).exec(db).await?;
@@ -320,4 +304,32 @@ pub async fn stats_flags(ctx: Context<'_>) -> Result<(), Error> {
     .await?;
 
     Ok(())
+}
+
+fn get_embed_flag(color: Colors, description: &str, flag: &Country, tries: i32) -> CreateEmbed {
+    CreateEmbed::new()
+        .color(color)
+        .title("🏁 Quiz of Flags")
+        .description(description)
+        .fields([
+            (
+                ":flag_us: English",
+                format!("{}/{}", flag.name.common, flag.name.official),
+                true,
+            ),
+            (
+                ":flag_es: Spanish",
+                format!(
+                    "{}/{}",
+                    flag.translations.spa.common, flag.translations.spa.official
+                ),
+                true,
+            ),
+        ])
+        .thumbnail(flag.coat_of_arms.png.clone())
+        .image(flag.flags.png.clone())
+        .footer(CreateEmbedFooter::new(format!(
+            "Tries: {}/{}",
+            tries, MAX_RETRIES
+        )))
 }
