@@ -11,6 +11,7 @@ pub enum Colors {
     Green,
     Orange,
     Red,
+    Fewwis,
     Custom(u8, u8, u8),
 }
 
@@ -22,6 +23,7 @@ impl From<Colors> for Color {
             Colors::Green => Color::from_rgb(178, 247, 117),
             Colors::Orange => Color::from_rgb(247, 194, 131),
             Colors::Red => Color::from_rgb(247, 131, 131),
+            Colors::Fewwis => Color::from_rgb(231, 127, 34),
             Colors::Custom(r, g, b) => Color::from_rgb(r, g, b),
         }
     }
@@ -29,7 +31,7 @@ impl From<Colors> for Color {
 
 pub async fn handle_error(error: poise::FrameworkError<'_, Data, Error>) {
     match error {
-        poise::FrameworkError::Command { error, ctx } => {
+        poise::FrameworkError::Command { error, ctx, .. } => {
             let reply = CreateReply::new();
             let embed = CreateEmbed::new();
             ctx.send(
@@ -45,7 +47,7 @@ pub async fn handle_error(error: poise::FrameworkError<'_, Data, Error>) {
             .await
             .unwrap();
         }
-        poise::FrameworkError::CommandCheckFailed { error, ctx } => {
+        poise::FrameworkError::CommandCheckFailed { error, ctx, .. } => {
             let reply = CreateReply::new();
             let embed = CreateEmbed::new();
             ctx.send(
@@ -121,7 +123,7 @@ impl Paginator {
         while let Some(interaction) = initial
             .message()
             .await?
-            .await_component_interactions(ctx.discord().shard.clone())
+            .await_component_interactions(ctx.serenity_context().shard.clone())
             .message_id(message_id)
             .timeout(Duration::from_secs(60))
             .await
@@ -226,5 +228,92 @@ impl Paginator {
         }
 
         buttons_row
+    }
+}
+
+pub mod db {
+    use crate::entities::flags::{self, Entity as Flags};
+    use crate::entities::rel_flags_stats;
+    use crate::entities::rel_users_stats::{self, Entity as Relation};
+    use crate::entities::stats::{self, Entity as Stats};
+    use crate::entities::users::{self, Entity as Users};
+    use crate::types::Error;
+    use sea_orm::{ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+    use serenity::all::{GuildId, UserId};
+    pub async fn get_user(
+        user_id: UserId,
+        guild_id: GuildId,
+        db: &DatabaseConnection,
+    ) -> Result<(users::Model, stats::Model), Error> {
+        let user = Users::find()
+            .filter(users::Column::User.eq(user_id.get()))
+            .filter(users::Column::Guild.eq(guild_id.get()))
+            .one(db)
+            .await?;
+        if let Some(user) = user {
+            let relation = Relation::find()
+                .filter(rel_users_stats::Column::UsersId.eq(user.id))
+                .one(db)
+                .await?
+                .unwrap()
+                .stats_id;
+            let stats = Stats::find_by_id(relation).one(db).await?.unwrap();
+            Ok((user, stats))
+        } else {
+            let user = Users::insert(users::ActiveModel {
+                user: ActiveValue::Set(user_id.get()),
+                guild: ActiveValue::Set(guild_id.get()),
+                ..Default::default()
+            })
+            .exec_with_returning(db)
+            .await?;
+            let stats = Stats::insert(stats::ActiveModel::default())
+                .exec_with_returning(db)
+                .await?;
+            Relation::insert(rel_users_stats::ActiveModel {
+                stats_id: ActiveValue::Set(stats.id),
+                users_id: ActiveValue::Set(user.id),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+            Ok((user, stats))
+        }
+    }
+
+    pub async fn get_flags(
+        stats_id: stats::Model,
+        db: &DatabaseConnection,
+    ) -> Result<flags::Model, Error> {
+        use rel_flags_stats::Entity as Relation;
+        let relation = Relation::find()
+            .filter(rel_flags_stats::Column::StatsId.eq(stats_id.id))
+            .one(db)
+            .await?;
+
+        if let Some(flags) = relation {
+            let flags = Flags::find_by_id(flags.flags_id).one(db).await?.unwrap();
+            Ok(flags)
+        } else {
+            let flags = Flags::insert(flags::ActiveModel {
+                first_attempt: ActiveValue::Set(0),
+                second_attempt: ActiveValue::Set(0),
+                third_attempt: ActiveValue::Set(0),
+                wrong: ActiveValue::Set(0),
+                ..Default::default()
+            })
+            .exec_with_returning(db)
+            .await?;
+
+            Relation::insert(rel_flags_stats::ActiveModel {
+                stats_id: ActiveValue::Set(stats_id.id),
+                flags_id: ActiveValue::Set(flags.id),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+
+            Ok(flags)
+        }
     }
 }

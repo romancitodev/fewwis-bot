@@ -26,13 +26,17 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk-rel-stats-r")
                             .from(Relation::Table, Relation::StatsId)
-                            .to(Stats::Table, Stats::Id),
+                            .to(Stats::Table, Stats::Id)
+                            .on_update(ForeignKeyAction::Cascade)
+                            .on_delete(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-rel-flags-r")
                             .from(Relation::Table, Relation::FlagsId)
-                            .to(Flags::Table, Flags::Id),
+                            .to(Flags::Table, Flags::Id)
+                            .on_update(ForeignKeyAction::Cascade)
+                            .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )

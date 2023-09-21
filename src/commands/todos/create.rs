@@ -47,6 +47,7 @@ pub async fn create_ctx_menu(ctx: Context<'_>, msg: serenity::Message) -> Result
 #[poise::command(
     slash_command,
     subcommands("create", "update", "delete"),
+    check = "on_private_guild",
     category = "Utilities"
 )]
 pub async fn todo(_: Context<'_>) -> Result<(), Error> {
@@ -122,6 +123,18 @@ async fn is_forum_post(ctx: Context<'_>) -> Result<bool, Error> {
     }
 
     Ok(true)
+}
+
+async fn on_private_guild(ctx: Context<'_>) -> Result<bool, Error> {
+    if !ctx
+        .channel_id()
+        .as_inner()
+        .eq(&NonZeroU64::new(1112598336613142580).unwrap())
+    {
+        Err("Invalid guild".into())
+    } else {
+        Ok(true)
+    }
 }
 
 /// Change the status of any task
@@ -207,7 +220,7 @@ pub async fn delete(
         if let Some(interaction) = response
             .message()
             .await?
-            .await_component_interactions(ctx.discord().shard.clone())
+            .await_component_interactions(ctx.serenity_context().shard.clone())
             .author_id(ctx.author().id)
             .message_id(response.message().await?.id)
             .timeout(Duration::from_secs(60))

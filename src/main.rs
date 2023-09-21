@@ -44,7 +44,7 @@ async fn main() {
             on_error: |error| Box::pin(handle_error(error)),
             ..Default::default()
         })
-        .user_data_setup(move |ctx, _ready, fm| {
+        .setup(move |ctx, _ready, fm| {
             Box::pin(async move {
                 info!("👷 Setting up the bot...");
                 ctx.set_activity(Some(ActivityData::playing("Casio Theme 4 life")));
@@ -56,16 +56,18 @@ async fn main() {
                 serenity::Command::set_global_commands(ctx, create_commands).await?;
                 info!("📤 Registered commands.");
                 info!("📡 Connecting to database...");
-                let connection = Database::connect(dotenvy::var("DATABASE_URL")?).await?;
+                let (db_url, db_name) = (
+                    dotenvy::var("DATABASE_URL")?,
+                    dotenvy::var("DATABASE_NAME")?,
+                );
+                let connection = Database::connect(db_url.clone()).await?;
                 connection
                     .execute(Statement::from_string(
                         connection.get_database_backend(),
-                        format!(
-                            "CREATE DATABASE IF NOT EXISTS `{}`;",
-                            dotenvy::var("DATABASE_NAME")?
-                        ),
+                        format!("CREATE DATABASE IF NOT EXISTS `{}`;", db_name.clone()),
                     ))
                     .await?;
+                let connection = Database::connect(format!("{db_url}{db_name}")).await?;
                 info!("📡 Connection to database successfull.");
                 info!("✅ Bot initialized.");
                 Ok(Data::new(connection))

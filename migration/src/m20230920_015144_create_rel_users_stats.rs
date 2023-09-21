@@ -27,15 +27,17 @@ impl MigrationTrait for Migration {
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-rel-users")
-                            .from(Relation::Table, Relation::Id)
+                            .from(Relation::Table, Relation::UsersId)
                             .to(Users::Table, Users::Id)
+                            .on_update(ForeignKeyAction::Cascade)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-rel-stats")
-                            .from(Relation::Table, Relation::Id)
+                            .from(Relation::Table, Relation::StatsId)
                             .to(Stats::Table, Stats::Id)
+                            .on_update(ForeignKeyAction::Cascade)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),

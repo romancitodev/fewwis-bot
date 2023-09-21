@@ -4,6 +4,9 @@ use serde::Deserialize;
 
 pub const RAPID_API_TRANSLATE: &str = "https://text-translator2.p.rapidapi.com/translate";
 
+pub const FLAGS_API: &str =
+    "https://restcountries.com/v3.1/all?fields=name,flags,translations,coatOfArms";
+
 pub const MEME_API: &str = "https://meme-api.com/gimme/{subreddit}/{count}";
 
 #[derive(Deserialize)]
@@ -40,4 +43,31 @@ pub struct Meme {
 pub struct Memes {
     pub count: i64,
     pub memes: Vec<Meme>,
+}
+
+pub type Countries = Vec<Country>;
+
+#[derive(Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Country {
+    pub name: CountryName,
+    pub flags: CountryImages,
+    pub coat_of_arms: CountryImages,
+    pub translations: Translation,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct CountryName {
+    pub common: String,
+    pub official: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct Translation {
+    pub spa: CountryName,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct CountryImages {
+    pub png: String,
 }

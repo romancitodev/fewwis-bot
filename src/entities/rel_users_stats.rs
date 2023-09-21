@@ -15,17 +15,17 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::stats::Entity",
-        from = "Column::Id",
+        from = "Column::StatsId",
         to = "super::stats::Column::Id",
-        on_update = "NoAction",
+        on_update = "Cascade",
         on_delete = "Cascade"
     )]
     Stats,
     #[sea_orm(
         belongs_to = "super::users::Entity",
-        from = "Column::Id",
+        from = "Column::UsersId",
         to = "super::users::Column::Id",
-        on_update = "NoAction",
+        on_update = "Cascade",
         on_delete = "Cascade"
     )]
     Users,

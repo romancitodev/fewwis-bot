@@ -11,7 +11,13 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Stats::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(Stats::Id).integer().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(Stats::Id)
+                            .integer()
+                            .not_null()
+                            .primary_key()
+                            .auto_increment(),
+                    )
                     .to_owned(),
             )
             .await

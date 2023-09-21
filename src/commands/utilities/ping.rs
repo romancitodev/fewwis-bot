@@ -16,7 +16,7 @@ pub async fn ping(
     let runners = shard_manager.runners.lock().await;
 
     let runner = runners
-        .get(&ctx.discord().shard_id)
+        .get(&ctx.serenity_context().shard_id)
         .ok_or("❌ Cannot found shard.")?;
 
     let ping = runner

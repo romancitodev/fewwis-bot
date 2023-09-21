@@ -11,8 +11,15 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Users::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(Users::Id).integer().not_null().primary_key())
-                    .col(ColumnDef::new(Users::Guild).integer().not_null())
+                    .col(
+                        ColumnDef::new(Users::Id)
+                            .integer()
+                            .not_null()
+                            .primary_key()
+                            .auto_increment(),
+                    )
+                    .col(ColumnDef::new(Users::User).big_unsigned().not_null())
+                    .col(ColumnDef::new(Users::Guild).big_unsigned().not_null())
                     .to_owned(),
             )
             .await
@@ -29,5 +36,6 @@ impl MigrationTrait for Migration {
 pub enum Users {
     Table,
     Id,
+    User,
     Guild,
 }

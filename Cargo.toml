@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 dotenvy = "0.15.7"
+rand = "0.8.5"
 reqwest = { version = "0.11.20", features = ["json"] }
 sea-orm = { version = "0.12.2", features = [
     "sqlx-mysql",
@@ -29,3 +30,6 @@ branch = "next"
 
 [workspace]
 members = [".", "migration"]
+
+[profile.dev]
+opt-level = 1
