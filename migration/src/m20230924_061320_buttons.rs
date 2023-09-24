@@ -20,9 +20,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Buttons::FirstAttempt).integer().not_null())
-                    .col(ColumnDef::new(Buttons::SecondAttempt).integer().not_null())
-                    .col(ColumnDef::new(Buttons::ThirdAttempt).integer().not_null())
+                    .col(ColumnDef::new(Buttons::Asserted).integer().not_null())
                     .col(ColumnDef::new(Buttons::Wrong).integer().not_null())
                     .to_owned(),
             )
@@ -40,8 +38,6 @@ impl MigrationTrait for Migration {
 pub enum Buttons {
     Table,
     Id,
-    FirstAttempt,
-    SecondAttempt,
-    ThirdAttempt,
+    Asserted,
     Wrong,
 }

@@ -14,13 +14,13 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::flags::Entity",
+        belongs_to = "super::buttons::Entity",
         from = "Column::ButtonsId",
-        to = "super::flags::Column::Id",
+        to = "super::buttons::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    Flags,
+    Buttons,
     #[sea_orm(
         belongs_to = "super::stats::Entity",
         from = "Column::StatsId",
@@ -31,9 +31,9 @@ pub enum Relation {
     Stats,
 }
 
-impl Related<super::flags::Entity> for Entity {
+impl Related<super::buttons::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Flags.def()
+        Relation::Buttons.def()
     }
 }
 

@@ -1,6 +1,6 @@
 use sea_orm_migration::prelude::*;
 
-use crate::{m20230920_015138_create_stats::Stats, m20230920_015156_create_flags_stats::Flags};
+use crate::{m20230920_015138_create_stats::Stats, m20230924_061320_buttons::Buttons};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk-rel-buttons-stats")
                             .from(Relation::Table, Relation::ButtonsId)
-                            .to(Flags::Table, Flags::Id)
+                            .to(Buttons::Table, Buttons::Id)
                             .on_update(ForeignKeyAction::Cascade)
                             .on_delete(ForeignKeyAction::Cascade),
                     )

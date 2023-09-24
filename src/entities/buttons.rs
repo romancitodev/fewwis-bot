@@ -7,13 +7,20 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub first_attempt: i32,
-    pub second_attempt: i32,
-    pub third_attempt: i32,
+    pub asserted: i32,
     pub wrong: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::rel_buttons_stats::Entity")]
+    RelButtonsStats,
+}
+
+impl Related<super::rel_buttons_stats::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::RelButtonsStats.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

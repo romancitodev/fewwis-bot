@@ -335,9 +335,7 @@ pub mod db {
             Ok(buttons)
         } else {
             let buttons = buttons::Entity::insert(buttons::ActiveModel {
-                first_attempt: ActiveValue::Set(0),
-                second_attempt: ActiveValue::Set(0),
-                third_attempt: ActiveValue::Set(0),
+                asserted: ActiveValue::Set(0),
                 wrong: ActiveValue::Set(0),
                 ..Default::default()
             })
