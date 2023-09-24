@@ -233,10 +233,10 @@ impl Paginator {
 
 pub mod db {
     use crate::entities::flags::{self, Entity as Flags};
-    use crate::entities::rel_flags_stats;
     use crate::entities::rel_users_stats::{self, Entity as Relation};
     use crate::entities::stats::{self, Entity as Stats};
     use crate::entities::users::{self, Entity as Users};
+    use crate::entities::{buttons, rel_buttons_stats, rel_flags_stats};
     use crate::types::Error;
     use sea_orm::{ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
     use serenity::all::{GuildId, UserId};
@@ -314,6 +314,45 @@ pub mod db {
             .await?;
 
             Ok(flags)
+        }
+    }
+
+    pub async fn get_buttons(
+        stats_id: stats::Model,
+        db: &DatabaseConnection,
+    ) -> Result<buttons::Model, Error> {
+        use rel_buttons_stats::Entity as Relation;
+        let relation = Relation::find()
+            .filter(rel_buttons_stats::Column::StatsId.eq(stats_id.id))
+            .one(db)
+            .await?;
+
+        if let Some(buttons) = relation {
+            let buttons = buttons::Entity::find_by_id(buttons.buttons_id)
+                .one(db)
+                .await?
+                .unwrap();
+            Ok(buttons)
+        } else {
+            let buttons = buttons::Entity::insert(buttons::ActiveModel {
+                first_attempt: ActiveValue::Set(0),
+                second_attempt: ActiveValue::Set(0),
+                third_attempt: ActiveValue::Set(0),
+                wrong: ActiveValue::Set(0),
+                ..Default::default()
+            })
+            .exec_with_returning(db)
+            .await?;
+
+            Relation::insert(rel_buttons_stats::ActiveModel {
+                stats_id: ActiveValue::Set(stats_id.id),
+                buttons_id: ActiveValue::Set(buttons.id),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+
+            Ok(buttons)
         }
     }
 }

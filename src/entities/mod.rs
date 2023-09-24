@@ -2,7 +2,9 @@
 
 pub mod prelude;
 
+pub mod buttons;
 pub mod flags;
+pub mod rel_buttons_stats;
 pub mod rel_flags_stats;
 pub mod rel_users_stats;
 pub mod stats;

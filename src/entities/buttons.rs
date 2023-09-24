@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "flags")]
+#[sea_orm(table_name = "buttons")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
@@ -14,15 +14,6 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(has_many = "super::rel_buttons_stats::Entity")]
-    RelButtonsStats,
-}
-
-impl Related<super::rel_buttons_stats::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::RelButtonsStats.def()
-    }
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

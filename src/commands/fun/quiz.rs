@@ -1,7 +1,4 @@
-use rand::{self, seq::SliceRandom, Rng};
-use sea_orm::EntityTrait;
-use std::time::Duration;
-
+use super::quiz_buttons::buttons;
 use crate::{
     api::{Countries, Country, FLAGS_API},
     entities::flags,
@@ -16,6 +13,9 @@ use ::serenity::{
     model,
 };
 use poise::{serenity_prelude as serenity, CreateReply};
+use rand::{self, seq::SliceRandom, Rng};
+use sea_orm::EntityTrait;
+use std::time::Duration;
 
 #[derive(PartialEq, Eq)]
 enum Reason {
@@ -31,7 +31,7 @@ const MAX_RETRIES: i32 = 3;
     slash_command,
     name_localized("es-ES", "trivia"),
     description_localized("es-ES", "Juega a una trivia!"),
-    subcommands("flags"),
+    subcommands("flags", "buttons"),
     category = "Games"
 )]
 pub async fn quiz(_: Context<'_>) -> Result<(), Error> {

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Word {
     word: String,
     variant: Option<String>,
@@ -30,7 +30,7 @@ impl Word {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Definition {
     def_type: String,
     definition: String,
@@ -42,6 +42,14 @@ impl Definition {
             def_type,
             definition,
         }
+    }
+
+    pub fn def_type(&self) -> &str {
+        self.def_type.as_ref()
+    }
+
+    pub fn definition(&self) -> &str {
+        self.definition.as_ref()
     }
 }
 
