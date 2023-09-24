@@ -127,7 +127,8 @@ async fn is_forum_post(ctx: Context<'_>) -> Result<bool, Error> {
 
 async fn on_private_guild(ctx: Context<'_>) -> Result<bool, Error> {
     if !ctx
-        .channel_id()
+        .guild_id()
+        .unwrap()
         .as_inner()
         .eq(&NonZeroU64::new(1112598336613142580).unwrap())
     {

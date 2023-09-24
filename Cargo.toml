@@ -29,7 +29,7 @@ git = "https://github.com/serenity-rs/serenity"
 branch = "next"
 
 [workspace]
-members = [".", "migration"]
+members = [".", "migration", "crates/raelib"]
 
 [profile.dev]
 opt-level = 1

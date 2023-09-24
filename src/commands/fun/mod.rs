@@ -1,8 +1,9 @@
 use crate::types::FnCommands;
 
 mod memes;
-mod quiz;
+mod quiz_buttons;
+mod quiz_flags;
 
 pub fn commands() -> FnCommands {
-    vec![memes::meme, quiz::quiz]
+    vec![memes::meme, quiz_flags::quiz]
 }
