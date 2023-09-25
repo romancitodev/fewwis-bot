@@ -3,7 +3,6 @@ use std::borrow::Cow;
 use crate::http::definitions::{Definition, Word};
 
 pub(crate) fn parse_request(request: String) -> Word {
-    // println!("{request:#?}");
     let dom = unsafe { tl::parse_owned(request.clone(), tl::ParserOptions::default()).unwrap() };
     let parser = dom.get_ref();
     let (word, variant) = extract_header(parser);
@@ -95,10 +94,6 @@ fn extract_header(parser: &tl::VDom<'_>) -> (String, Option<String>) {
         }
     };
     (word, variant)
-}
-
-fn expand_definition_type(_: Cow<'_, str>) -> String {
-    todo!()
 }
 
 fn to_latin_chars(word: Cow<'_, str>) -> String {
