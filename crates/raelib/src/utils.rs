@@ -62,8 +62,6 @@ fn extract_abbrs(nodes: &[tl::Node<'_>], dom: &tl::VDom<'_>) -> Vec<(String, Str
         .collect::<Vec<_>>()
 }
 
-// fn extract_definition
-
 fn extract_header(parser: &tl::VDom<'_>) -> (String, Option<String>) {
     let word = to_latin_chars(
         parser
