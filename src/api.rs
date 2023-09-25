@@ -7,7 +7,7 @@ pub const RAPID_API_TRANSLATE: &str = "https://text-translator2.p.rapidapi.com/t
 pub const FLAGS_API: &str =
     "https://restcountries.com/v3.1/all?fields=name,flags,translations,coatOfArms";
 
-pub const MEME_API: &str = "https://meme-api.com/gimme/{subreddit}/{count}";
+pub const MEME_API: &str = "https://meme-api.com/gimme/";
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

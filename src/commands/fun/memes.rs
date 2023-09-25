@@ -23,8 +23,6 @@ pub async fn meme(
     #[description_localized("es-ES", "Subreddit a fetchear")]
     subreddit: Option<String>,
 ) -> Result<(), Error> {
-    let subreddit = subreddit.unwrap_or("ShitpostingLatam".to_owned());
-
     let reply = CreateReply::new();
 
     ctx.defer_ephemeral().await?;
@@ -100,14 +98,12 @@ pub async fn meme(
     Ok(())
 }
 
-async fn get_memes(subreddit: String, count: i64) -> Result<Memes, Error> {
-    let data = reqwest::get(
-        MEME_API
-            .replace("{subreddit}", &subreddit)
-            .replace("{count}", &count.to_string()),
-    )
-    .await?
-    .json::<Memes>()
-    .await?;
+async fn get_memes(subreddit: Option<String>, count: i64) -> Result<Memes, Error> {
+    let url = if let Some(group) = subreddit {
+        format!("{MEME_API}{group}/{count}")
+    } else {
+        format!("{MEME_API}{count}")
+    };
+    let data = reqwest::get(url).await?.json::<Memes>().await?;
     Ok(data)
 }
