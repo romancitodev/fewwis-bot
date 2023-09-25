@@ -1,4 +1,4 @@
-use raelib::prelude::client::RaeClient;
+use raelib::prelude::RaeClient;
 use rand::{self, seq::SliceRandom};
 use sea_orm::EntityTrait;
 use std::time::Duration;
