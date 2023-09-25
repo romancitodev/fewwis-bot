@@ -27,12 +27,12 @@ enum Reason {
 /// Set the quiz about words
 #[poise::command(
     slash_command,
-    name_localized("es-ES", "botones"),
-    description_localized("es-ES", "Trivia de botones!"),
+    name_localized("es-ES", "definiciones"),
+    description_localized("es-ES", "Trivia de definiciones de palabras!"),
     subcommands("play_buttons", "stats_buttons"),
     category = "Games"
 )]
-pub async fn buttons(_: Context<'_>) -> Result<(), Error> {
+pub async fn definitions(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
@@ -40,7 +40,7 @@ pub async fn buttons(_: Context<'_>) -> Result<(), Error> {
 #[poise::command(
     slash_command,
     name_localized("es-ES", "jugar"),
-    description_localized("es-ES", "Juega a una trivia de botones!"),
+    description_localized("es-ES", "Juega a una trivia de definiciones del diccionario!"),
     rename = "play",
     category = "Games"
 )]
@@ -236,11 +236,11 @@ pub async fn play_buttons(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// View your stats in quiz flags
+/// View your stats in quiz words
 #[poise::command(
     slash_command,
     name_localized("es-ES", "estadisticas"),
-    description_localized("es-ES", "Mira tus estadisticas sobre la trivia de botones!"),
+    description_localized("es-ES", "Mira tus estadisticas sobre la trivia de definiciones!"),
     rename = "stats",
     category = "Games"
 )]

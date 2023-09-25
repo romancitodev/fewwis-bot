@@ -8,7 +8,7 @@ mod flags;
     slash_command,
     name_localized("es-ES", "trivia"),
     description_localized("es-ES", "Juega a una trivia!"),
-    subcommands("super::quiz::flags::flags", "super::quiz::buttons::buttons"),
+    subcommands("super::quiz::flags::flags", "super::quiz::buttons::definitions"),
     category = "Games"
 )]
 pub async fn quiz(_: Context<'_>) -> Result<(), Error> {
