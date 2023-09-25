@@ -6,7 +6,8 @@ use crate::utils;
 
 use super::definitions::{Word, WordMetaData};
 
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Error = crate::http::errors::Error;
+
 #[derive(Debug, Clone)]
 pub struct RaeClient {
     client: reqwest::Client,

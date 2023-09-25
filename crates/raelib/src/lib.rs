@@ -6,7 +6,7 @@ mod utils;
 
 #[cfg(test)]
 mod tests {
-    use prelude::client::RaeClient;
+    use prelude::RaeClient;
 
     use super::*;
 
@@ -30,7 +30,6 @@ mod tests {
         for _ in 0..5 {
             let defs = client.get_random().await;
             assert!(defs.is_ok());
-            println!("{:#?}", defs.unwrap());
         }
     }
 }
