@@ -21,11 +21,15 @@ pub async fn translate_ctx_menu(
     ctx.send(
         reply.embed(
             embed
-                .title("📄 Translator")
-                .description(format!(
-                    "> 📤 **Original Text**: `{}`\n\n> ✨ **Translated Text**: `{}`",
-                    text, response.data.translated_text
-                ))
+                .title("📄 Google translate (joke i don't have money to pay that)")
+                .fields([
+                    ("📤 Original Text: ", text, true),
+                    (
+                        "✨ **Translated Text**",
+                        response.data.translated_text,
+                        true,
+                    ),
+                ])
                 .color(Color::BLURPLE),
         ),
     )
@@ -47,11 +51,15 @@ pub async fn translate(
     ctx.send(
         reply.embed(
             embed
-                .title("📄 Translator")
-                .description(format!(
-                    "> 📤 **Original Text**: `{}`\n\n> ✨ **Translated Text**: `{}`",
-                    text, response.data.translated_text
-                ))
+                .title("📄 Google translate (joke i don't have money to pay that)")
+                .fields([
+                    ("📤 Original Text: ", text, true),
+                    (
+                        "✨ **Translated Text**",
+                        response.data.translated_text,
+                        true,
+                    ),
+                ])
                 .color(Color::BLURPLE),
         ),
     )
