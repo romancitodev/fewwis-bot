@@ -1,3 +1,4 @@
+use crate::consts::{OWNER_GUILD, TODO_CHANNEL, TODO_TAG};
 use crate::{Context, Error};
 use ::serenity::{
     all::ForumTagId,
@@ -6,9 +7,8 @@ use ::serenity::{
     },
     model::Color,
 };
-use poise::{serenity_prelude as serenity, CreateReply};
-
 use poise::ChoiceParameter;
+use poise::{serenity_prelude as serenity, CreateReply};
 use serenity::ChannelType;
 use std::{num::NonZeroU64, time::Duration};
 use tracing::error;
@@ -25,8 +25,8 @@ pub async fn create_ctx_menu(ctx: Context<'_>, msg: serenity::Message) -> Result
             .content(format!("created by {}", ctx.author().clone()))
             .allowed_mentions(CreateAllowedMentions::default().empty_users()),
     )
-    .add_applied_tag(1150602743623471215.into())
-    .execute(ctx, 1150602558075846816.into())
+    .add_applied_tag(TODO_TAG.into())
+    .execute(ctx, TODO_CHANNEL.into())
     .await?;
 
     ctx.send(
@@ -46,7 +46,7 @@ pub async fn create_ctx_menu(ctx: Context<'_>, msg: serenity::Message) -> Result
 
 #[poise::command(
     slash_command,
-    subcommands("create", "update", "delete"),
+    subcommands("create", "update", "delete", "steps"),
     check = "on_private_guild",
     category = "Utilities"
 )]
@@ -69,8 +69,8 @@ pub async fn create(
             .content(description)
             .allowed_mentions(CreateAllowedMentions::default().empty_users()),
     )
-    .add_applied_tag(1150602743623471215.into())
-    .execute(ctx, 1150602558075846816.into())
+    .add_applied_tag(TODO_TAG.into())
+    .execute(ctx, TODO_CHANNEL.into())
     .await?;
 
     ctx.send(
@@ -130,7 +130,7 @@ async fn on_private_guild(ctx: Context<'_>) -> Result<bool, Error> {
         .guild_id()
         .unwrap()
         .as_inner()
-        .eq(&NonZeroU64::new(1112598336613142580).unwrap())
+        .eq(&NonZeroU64::new(OWNER_GUILD).unwrap())
     {
         Err("Invalid guild".into())
     } else {
@@ -152,9 +152,9 @@ pub async fn update(
     let reply = CreateReply::new();
     let embed = CreateEmbed::new();
 
-    if channel.applied_tags.contains(&serenity::ForumTagId(
-        NonZeroU64::new(status as u64).unwrap(),
-    )) {
+    let forum_tag_id = ForumTagId::from(status as u64);
+
+    if channel.applied_tags.contains(&forum_tag_id) {
         return Err("You can't set the same tag.".into());
     }
 
@@ -169,7 +169,7 @@ pub async fn update(
         .edit_thread(
             ctx,
             EditThread::default()
-                .applied_tags([ForumTagId::from(status as u64)])
+                .applied_tags([forum_tag_id])
                 .archived(status == Status::Finished),
         )
         .await?;
@@ -250,5 +250,16 @@ pub async fn delete(
         channel.delete(ctx).await?;
     }
 
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    name_localized("es-ES", "pasos"),
+    description_localized("es-ES", "Establece los pasos a seguir dentro de la tarea"),
+    category = "Utilities"
+)]
+pub async fn steps(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say("Hello, world!").await?;
     Ok(())
 }

@@ -1,18 +1,18 @@
 #![feature(exclusive_range_pattern)]
 
-use std::collections::HashSet;
-
 use ::serenity::gateway::ActivityData;
+use consts::OWNER_BOT;
 use helper::handle_error;
 use poise::serenity_prelude as serenity;
 use sea_orm::{ConnectionTrait, Database, Statement};
+use std::collections::HashSet;
 use tracing::{error, info};
 mod api;
 mod commands;
+mod consts;
 mod entities;
 mod helper;
 mod types;
-
 use types::*;
 
 #[tokio::main]
@@ -21,13 +21,14 @@ async fn main() {
         error!("❌ `dotenv`: {e}");
         std::process::exit(0);
     };
+
     tracing_subscriber::fmt::init();
     poise::FrameworkBuilder::default()
         .token(dotenvy::var("BOT_TOKEN").expect("❌ Missing BOT_TOKEN in .env file"))
         .intents(serenity::GatewayIntents::all())
         .options(poise::FrameworkOptions {
             commands: commands::all(),
-            owners: HashSet::from([401845716991082496.into()]),
+            owners: HashSet::from([OWNER_BOT.into()]),
             pre_command: |ctx| {
                 Box::pin(async move {
                     info!(
