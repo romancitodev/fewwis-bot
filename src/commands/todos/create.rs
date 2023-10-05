@@ -1,5 +1,6 @@
 use crate::consts::{OWNER_GUILD, TODO_CHANNEL, TODO_TAG};
-use crate::{Context, Error};
+use crate::{ApplicationContext, Context, Error};
+use ::serenity::collector::ComponentInteractionCollector;
 use ::serenity::{
     all::ForumTagId,
     builder::{
@@ -7,8 +8,8 @@ use ::serenity::{
     },
     model::Color,
 };
-use poise::ChoiceParameter;
 use poise::{serenity_prelude as serenity, CreateReply};
+use poise::{ChoiceParameter, Modal};
 use serenity::ChannelType;
 use std::{num::NonZeroU64, time::Duration};
 use tracing::error;
@@ -253,13 +254,24 @@ pub async fn delete(
     Ok(())
 }
 
+#[derive(Debug, poise::Modal)]
+#[name = "First"]
+struct TaskModal {
+    #[name = "Milestone"]
+    #[placeholder = "Fill this with your milestone"]
+    #[min_length = 1]
+    #[paragraph]
+    task_list: String,
+}
+
 #[poise::command(
     slash_command,
     name_localized("es-ES", "pasos"),
     description_localized("es-ES", "Establece los pasos a seguir dentro de la tarea"),
     category = "Utilities"
 )]
-pub async fn steps(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("Hello, world!").await?;
+pub async fn steps(ctx: ApplicationContext<'_>) -> Result<(), Error> {
+    let data = TaskModal::execute(ctx).await?.unwrap();
+    ctx.say(format!("{:?}", data)).await?;
     Ok(())
 }
