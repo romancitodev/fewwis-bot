@@ -24,7 +24,7 @@ impl MigrationTrait for Migration {
                     .foreign_key(
                         ForeignKey::create()
                             .name("rel-post-subtask")
-                            .from(Step::Table, Step::Id)
+                            .from(Step::Table, Step::TaskId)
                             .to(Task::Table, Task::Id)
                             .on_update(ForeignKeyAction::Cascade)
                             .on_delete(ForeignKeyAction::Cascade),
