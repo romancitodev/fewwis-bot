@@ -1,6 +1,7 @@
 use crate::consts::{OWNER_GUILD, TODO_CHANNEL, TODO_TAG};
+use crate::helper::db::{add_steps, get_all_steps, get_post, save_post};
 use crate::{ApplicationContext, Context, Error};
-use ::serenity::collector::ComponentInteractionCollector;
+
 use ::serenity::{
     all::ForumTagId,
     builder::{
@@ -11,6 +12,7 @@ use ::serenity::{
 use poise::{serenity_prelude as serenity, CreateReply};
 use poise::{ChoiceParameter, Modal};
 use serenity::ChannelType;
+use std::fmt::Write;
 use std::{num::NonZeroU64, time::Duration};
 use tracing::error;
 
@@ -255,7 +257,7 @@ pub async fn delete(
 }
 
 #[derive(Debug, poise::Modal)]
-#[name = "First"]
+#[name = "To-do List"]
 struct TaskModal {
     #[name = "Milestone"]
     #[placeholder = "Fill this with your milestone"]
@@ -264,14 +266,65 @@ struct TaskModal {
     task_list: String,
 }
 
+/// Set the milestone of a task
 #[poise::command(
     slash_command,
     name_localized("es-ES", "pasos"),
     description_localized("es-ES", "Establece los pasos a seguir dentro de la tarea"),
-    category = "Utilities"
+    category = "Utilities",
+    subcommands("steps_add")
 )]
-pub async fn steps(ctx: ApplicationContext<'_>) -> Result<(), Error> {
-    let data = TaskModal::execute(ctx).await?.unwrap();
-    ctx.say(format!("{:?}", data)).await?;
+pub async fn steps(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    name_localized("es-ES", "agregar"),
+    description_localized("es-ES", "Establece los pasos a seguir dentro de la tarea"),
+    category = "Utilities",
+    rename = "add"
+)]
+pub async fn steps_add(ctx: ApplicationContext<'_>) -> Result<(), Error> {
+    let Ok(Some(data)) = TaskModal::execute(ctx).await else {
+        ctx.defer_ephemeral().await?;
+        ctx.reply("❌ Timeout... you have ran out of time to complete the modal.")
+            .await?;
+        return Ok(());
+    };
+    let db = &ctx.data().db;
+    let channel_id = ctx.channel_id().get();
+    let tasks: Vec<String> = data.task_list.split('\n').map(String::from).collect();
+    let post = match get_post(db, channel_id).await {
+        Ok(model) => model,
+        Err(_) => {
+            save_post(
+                db,
+                channel_id,
+                ctx.channel_id()
+                    .to_channel(ctx.serenity_context())
+                    .await?
+                    .to_string(),
+            )
+            .await?
+        }
+    };
+
+    add_steps(db, post.id, tasks).await?;
+    let tasks = get_all_steps(db, post.id)
+        .await?
+        .iter()
+        .fold(String::new(), |mut acc, task| {
+            writeln!(
+                &mut acc,
+                "> [{}] **{}.** {}",
+                if task.completed != 0 { "X" } else { " " },
+                task.index,
+                task.description
+            )
+            .unwrap();
+            acc
+        });
+    ctx.say(tasks).await?;
     Ok(())
 }
