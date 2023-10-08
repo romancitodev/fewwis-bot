@@ -6,4 +6,6 @@ pub use super::rel_buttons_stats::Entity as RelButtonsStats;
 pub use super::rel_flags_stats::Entity as RelFlagsStats;
 pub use super::rel_users_stats::Entity as RelUsersStats;
 pub use super::stats::Entity as Stats;
+pub use super::step::Entity as Step;
+pub use super::task::Entity as Task;
 pub use super::users::Entity as Users;
