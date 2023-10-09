@@ -239,7 +239,9 @@ pub mod db {
     use crate::entities::users::{self, Entity as Users};
     use crate::entities::{buttons, rel_buttons_stats, rel_flags_stats, step, task};
     use crate::types::Error;
-    use sea_orm::{ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+    use sea_orm::{
+        ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter,
+    };
     use serenity::all::{GuildId, UserId};
     pub async fn get_user(
         user_id: UserId,
@@ -446,5 +448,22 @@ pub mod db {
         } else {
             Err("❌ Something went wrong...".into())
         }
+    }
+
+    pub async fn update_task(
+        db: &DatabaseConnection,
+        step_id: i32,
+        state: bool,
+    ) -> Result<(), Error> {
+        use step::Entity as Step;
+
+        let model = step::ActiveModel {
+            id: ActiveValue::Set(step_id),
+            completed: ActiveValue::Set(state as i8),
+            ..Default::default()
+        };
+
+        Step::update(model).exec(db).await?;
+        Ok(())
     }
 }
