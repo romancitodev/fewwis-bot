@@ -1,10 +1,11 @@
 use std::fmt::Write;
 
 use crate::{
-    helper::db::{add_steps, get_all_steps, get_post, save_post},
+    helper::db::{add_steps, get_all_steps, get_post},
     types::{ApplicationContext, Error},
 };
-use poise::{serenity_prelude as serenity, Modal};
+use ::serenity::builder::{CreateEmbed, EditMessage};
+use poise::Modal;
 
 #[derive(Debug, Modal)]
 #[name = "To-do List"]
@@ -33,20 +34,7 @@ pub async fn add(ctx: ApplicationContext<'_>) -> Result<(), Error> {
     let db = &ctx.data().db;
     let channel_id = ctx.channel_id().get();
     let tasks: Vec<String> = data.task_list.split('\n').map(String::from).collect();
-    let post = match get_post(db, channel_id).await {
-        Ok(model) => model,
-        Err(_) => {
-            save_post(
-                db,
-                channel_id,
-                ctx.channel_id()
-                    .to_channel(ctx.serenity_context())
-                    .await?
-                    .to_string(),
-            )
-            .await?
-        }
-    };
+    let post = get_post(db, channel_id).await?;
 
     add_steps(db, post.id, tasks).await?;
     let tasks = get_all_steps(db, post.id)
@@ -63,6 +51,24 @@ pub async fn add(ctx: ApplicationContext<'_>) -> Result<(), Error> {
             .unwrap();
             acc
         });
-    ctx.say(tasks).await?;
+
+    let message = ctx.channel_id().message(ctx.http(), post.post_id).await?;
+
+    let mut embeds = message
+        .embeds
+        .iter()
+        .cloned()
+        .map(CreateEmbed::from)
+        .collect::<Vec<_>>();
+
+    embeds[1] = CreateEmbed::new().title("Tasks").description(tasks);
+
+    ctx.channel_id()
+        .edit_message(
+            ctx.http(),
+            message.id,
+            EditMessage::new().add_embeds(embeds),
+        )
+        .await?;
     Ok(())
 }
