@@ -4,6 +4,7 @@ use crate::{
 };
 
 mod add;
+mod delete;
 mod update;
 
 async fn task_autocompleter(
@@ -37,7 +38,7 @@ async fn task_autocompleter(
     name_localized("es-ES", "pasos"),
     description_localized("es-ES", "Establece los pasos a seguir dentro de la tarea"),
     category = "Utilities",
-    subcommands("add::add", "update::update")
+    subcommands("add::add", "update::update", "delete::delete")
 )]
 pub async fn steps(_: Context<'_>) -> Result<(), Error> {
     Ok(())
