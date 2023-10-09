@@ -59,6 +59,8 @@ pub async fn create(
     .execute(ctx, TODO_CHANNEL.into())
     .await?;
 
+    save_post(db, post.id.get(), title).await?;
+
     ctx.send(
         reply
             .embed(

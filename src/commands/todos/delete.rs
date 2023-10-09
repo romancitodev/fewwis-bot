@@ -1,6 +1,9 @@
 use std::time::Duration;
 
-use crate::types::{Context, Error};
+use crate::{
+    helper::db::delete_post,
+    types::{Context, Error},
+};
 use ::serenity::{builder::CreateEmbed, model::Color};
 use poise::{serenity_prelude as serenity, CreateReply};
 use tracing::error;
@@ -18,6 +21,7 @@ pub async fn delete(
 
     let force = force.unwrap_or_default();
 
+    let db = &ctx.data().db;
     let reply = CreateReply::new();
     let embed = CreateEmbed::new();
     let row = serenity::CreateActionRow::Buttons(vec![
@@ -61,6 +65,7 @@ pub async fn delete(
                     response.delete(ctx).await?;
                 }
                 "confirm" => {
+                    delete_post(db, channel.id.get()).await?;
                     channel.delete(ctx).await?;
                 }
                 _ => unreachable!(),
@@ -76,6 +81,7 @@ pub async fn delete(
                 .ephemeral(true)).await?;
         }
     } else {
+        delete_post(db, channel.id.get()).await?;
         channel.delete(ctx).await?;
     }
 

@@ -428,4 +428,23 @@ pub mod db {
 
         Ok(vec)
     }
+
+    pub async fn delete_post(db: &DatabaseConnection, post_id: u64) -> Result<(), Error> {
+        use task::Entity as Task;
+        let model = Task::find()
+            .filter(task::Column::PostId.eq(post_id))
+            .one(db)
+            .await?;
+        if let Some(model) = model {
+            Task::delete(task::ActiveModel {
+                id: ActiveValue::Set(model.id),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+            Ok(())
+        } else {
+            Err("❌ Something went wrong...".into())
+        }
+    }
 }
