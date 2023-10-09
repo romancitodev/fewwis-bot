@@ -7,6 +7,8 @@ mod m20230920_015156_create_flags_stats;
 mod m20230920_015202_create_rel_flags_stats;
 mod m20230924_061320_buttons;
 mod m20230924_061332_create_rel_buttons;
+mod m20231004_203431_create_tasks;
+mod m20231004_203500_create_subtasks;
 
 pub struct Migrator;
 
@@ -21,6 +23,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20230920_015202_create_rel_flags_stats::Migration),
             Box::new(m20230924_061320_buttons::Migration),
             Box::new(m20230924_061332_create_rel_buttons::Migration),
+            Box::new(m20231004_203431_create_tasks::Migration),
+            Box::new(m20231004_203500_create_subtasks::Migration),
         ]
     }
 }

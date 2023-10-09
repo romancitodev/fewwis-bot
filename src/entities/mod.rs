@@ -8,4 +8,6 @@ pub mod rel_buttons_stats;
 pub mod rel_flags_stats;
 pub mod rel_users_stats;
 pub mod stats;
+pub mod step;
+pub mod task;
 pub mod users;

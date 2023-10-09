@@ -232,11 +232,12 @@ impl Paginator {
 }
 
 pub mod db {
+
     use crate::entities::flags::{self, Entity as Flags};
     use crate::entities::rel_users_stats::{self, Entity as Relation};
     use crate::entities::stats::{self, Entity as Stats};
     use crate::entities::users::{self, Entity as Users};
-    use crate::entities::{buttons, rel_buttons_stats, rel_flags_stats};
+    use crate::entities::{buttons, rel_buttons_stats, rel_flags_stats, step, task};
     use crate::types::Error;
     use sea_orm::{ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
     use serenity::all::{GuildId, UserId};
@@ -352,5 +353,127 @@ pub mod db {
 
             Ok(buttons)
         }
+    }
+    pub async fn get_post(db: &DatabaseConnection, post_id: u64) -> Result<task::Model, Error> {
+        use task::Entity as Task;
+        let tasks = Task::find()
+            .filter(task::Column::PostId.eq(post_id))
+            .one(db)
+            .await?;
+
+        if let Some(tasks) = tasks {
+            return Ok(tasks);
+        }
+        Err("Cannot find task channel...".into())
+    }
+
+    pub async fn save_post(
+        db: &DatabaseConnection,
+        post_id: u64,
+        title: String,
+    ) -> Result<task::Model, Error> {
+        use task::{ActiveModel, Entity as Task};
+        Task::insert(ActiveModel {
+            post_id: sea_orm::ActiveValue::Set(post_id),
+            title: sea_orm::ActiveValue::Set(title),
+            ..Default::default()
+        })
+        .exec_with_returning(db)
+        .await
+        .map_err(|x| x.into())
+    }
+
+    pub async fn add_steps(
+        db: &DatabaseConnection,
+        task_id: i32,
+        steps: Vec<String>,
+    ) -> Result<(), Error> {
+        use step::Entity as Step;
+        let last_id = get_last_index(db, task_id).await.unwrap_or_default();
+
+        for (i, step) in steps.iter().enumerate() {
+            Step::insert(step::ActiveModel {
+                index: ActiveValue::Set(last_id + i as i64 + 1),
+                description: ActiveValue::Set(step.clone()),
+                task_id: ActiveValue::Set(task_id),
+                completed: ActiveValue::Set(0),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+        }
+
+        Ok(())
+    }
+
+    async fn get_last_index(db: &DatabaseConnection, task_id: i32) -> Option<i64> {
+        use step::Entity as Step;
+        let vec = &Step::find()
+            .filter(step::Column::TaskId.eq(task_id))
+            .all(db)
+            .await
+            .unwrap();
+        vec.last().map(|model| model.index)
+    }
+
+    pub async fn get_all_steps(
+        db: &DatabaseConnection,
+        task_id: i32,
+    ) -> Result<Vec<step::Model>, Error> {
+        use step::Entity as Step;
+        let vec = Step::find()
+            .filter(step::Column::TaskId.eq(task_id))
+            .all(db)
+            .await?;
+
+        Ok(vec)
+    }
+
+    pub async fn delete_post(db: &DatabaseConnection, post_id: u64) -> Result<(), Error> {
+        use task::Entity as Task;
+        let model = Task::find()
+            .filter(task::Column::PostId.eq(post_id))
+            .one(db)
+            .await?;
+        if let Some(model) = model {
+            Task::delete(task::ActiveModel {
+                id: ActiveValue::Set(model.id),
+                ..Default::default()
+            })
+            .exec(db)
+            .await?;
+            Ok(())
+        } else {
+            Err("❌ Something went wrong...".into())
+        }
+    }
+
+    pub async fn update_task(
+        db: &DatabaseConnection,
+        step_id: i32,
+        state: bool,
+    ) -> Result<(), Error> {
+        use step::Entity as Step;
+
+        let model = step::ActiveModel {
+            id: ActiveValue::Set(step_id),
+            completed: ActiveValue::Set(state as i8),
+            ..Default::default()
+        };
+
+        Step::update(model).exec(db).await?;
+        Ok(())
+    }
+
+    pub async fn delete_task(db: &DatabaseConnection, step_id: i32) -> Result<(), Error> {
+        use step::Entity as Step;
+
+        let model = step::ActiveModel {
+            id: ActiveValue::Set(step_id),
+            ..Default::default()
+        };
+        Step::delete(model).exec(db).await?;
+
+        Ok(())
     }
 }
