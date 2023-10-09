@@ -125,7 +125,7 @@ fn format_steps(steps: &str) -> String {
         .split('\n')
         .enumerate()
         .fold(String::new(), |mut acc, (index, task)| {
-            writeln!(&mut acc, "> [ ] **{}.** {}", index + 1, task).unwrap();
+            writeln!(&mut acc, "> ⏳ **{}.** {}", index + 1, task).unwrap();
             acc
         })
 }

@@ -1,7 +1,10 @@
 use std::fmt::Write;
 
 use crate::{
-    helper::db::{add_steps, get_all_steps, get_post},
+    helper::{
+        db::{add_steps, get_all_steps, get_post},
+        Colors,
+    },
     types::{ApplicationContext, Error},
 };
 use ::serenity::builder::{CreateEmbed, EditMessage};
@@ -43,8 +46,8 @@ pub async fn add(ctx: ApplicationContext<'_>) -> Result<(), Error> {
         .fold(String::new(), |mut acc, task| {
             writeln!(
                 &mut acc,
-                "> [{}] **{}.** {}",
-                if task.completed != 0 { "X" } else { " " },
+                "> {} **{}.** {}",
+                if task.completed != 0 { "✅" } else { "⏳" },
                 task.index,
                 task.description
             )
@@ -61,7 +64,10 @@ pub async fn add(ctx: ApplicationContext<'_>) -> Result<(), Error> {
         .map(CreateEmbed::from)
         .collect::<Vec<_>>();
 
-    embeds[1] = CreateEmbed::new().title("Tasks").description(tasks);
+    embeds[1] = CreateEmbed::new()
+        .title("Tasks")
+        .description(tasks)
+        .color(Colors::Fewwis);
 
     ctx.channel_id()
         .edit_message(
