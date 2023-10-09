@@ -7,18 +7,7 @@ use crate::{
     },
     types::{Context, Error},
 };
-use poise::Modal;
 use serenity::builder::{CreateEmbed, EditMessage};
-
-#[derive(Debug, Modal)]
-#[name = "To-do List"]
-struct TaskModal {
-    #[name = "Milestone"]
-    #[placeholder = "Fill this with your milestone"]
-    #[min_length = 1]
-    #[paragraph]
-    task_list: String,
-}
 
 /// Update the state of a step.
 #[poise::command(
