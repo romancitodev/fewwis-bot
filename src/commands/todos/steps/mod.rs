@@ -27,7 +27,7 @@ async fn task_autocompleter(
             );
             poise::AutocompleteChoice::new_with_value(description, choice.id)
         })
-        .filter(move |t| t.label.starts_with(partial))
+        .filter(move |t| t.label.contains(partial))
         .collect::<Vec<_>>()
         .into_iter()
 }
